@@ -4,10 +4,7 @@ import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.lang.reflect.Array;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
@@ -29,15 +26,17 @@ import org.apache.poi.ss.util.CellRangeAddress;
 
 public class WordTable2Excel {
     public static void main(String[] args) throws IOException {
-        String fileName = "E:\\word";
-        testWord(fileName);
+        String filePath = "E:\\心肺复苏";
+        HSSFWorkbook wb = getExcel(filePath);
+        String newFileName = saveExcel(wb);
+        System.out.println(newFileName);
     }
 
-    public static void testWord(String fileName) {
+    public static HSSFWorkbook getExcel(String filePath) {
         try {
             //载入文档最好格式为.doc后缀
             //.docx后缀文件可能存在问题，可将.docx后缀文件另存为.doc
-            FileInputStream in = new FileInputStream(fileName + ".doc");//载入文档
+            FileInputStream in = new FileInputStream(filePath + ".doc");//载入文档
             POIFSFileSystem pfs = new POIFSFileSystem(in);
             HWPFDocument hwpf = new HWPFDocument(pfs);
             Range range = hwpf.getRange();//得到文档的读取范围
@@ -87,13 +86,14 @@ public class WordTable2Excel {
                 }
             }
             //将word中的表格转成excel保存
-            createExeclTest(Coordinates, fileName, emptyMap);
+            return createExecl(Coordinates, emptyMap);
         } catch (Exception e) {
             e.printStackTrace();
         }
-    }// end method
+        return null;
+    }
 
-    public static void createExeclTest(List<Coordinate> list, String fileName, Map<Integer, List<Coordinate>> emptyMap) {
+    public static HSSFWorkbook createExecl(List<Coordinate> list, Map<Integer, List<Coordinate>> emptyMap) {
         // 第一步，创建一个webbook，对应一个Excel文件
         HSSFWorkbook wb = new HSSFWorkbook();
         // 第二步，在webbook中添加一个sheet,对应Excel文件中的sheet
@@ -129,7 +129,7 @@ public class WordTable2Excel {
         int lastRowC1 = column0.get(column0.size() - 1).getRow();
         rowsC1.add(0, firstRowC1);
         for (int i = 0; i < column0.size() - 1; i++) {
-            //分割空白单元格
+            //纵向分割空白单元格
             Coordinate current = column0.get(i);
             Coordinate next = column0.get(i + 1);
             if (next.getRow() - current.getRow() > 1) {
@@ -138,18 +138,16 @@ public class WordTable2Excel {
                 if (next.getRow() != lastRowC1) {
                     rowsC1.add(next.getRow());
                 }
-                //System.out.println("flag: " + current.getRow() + "--" + next.getRow());
             } else {//空白单元格是连续的
-                rowsC1.add(column0.get(column0.size() - 1).getRow());
-                break;
+                if (i == column0.size() - 2) {
+                    rowsC1.add(column0.get(column0.size() - 1).getRow());
+                }
             }
         }
-        System.out.println(rowsC1);
         for (int i = 0; i < rowsC1.size() - 1; i = i + 2) {
             CellRangeAddress region = new CellRangeAddress(rowsC1.get(i) - 1, rowsC1.get(i + 1), 0, 0);
             sheet.addMergedRegion(region);
         }
-
 
         //合并第二列空白单元格
         List<Coordinate> column1 = emptyMap.get(1);
@@ -166,11 +164,12 @@ public class WordTable2Excel {
                 rows.add(current.getRow());
                 if (next.getRow() != lastRow) {
                     rows.add(next.getRow());
-                }else {//空白单元格是连续的
-                    rowsC1.add(column0.get(column0.size() - 1).getRow());
-                    break;
+                } else {//空白单元格是连续的
+                    rowsC1.add(column1.get(column1.size() - 1).getRow());
+                    if (i == column1.size() - 2) {
+                        rowsC1.add(column1.get(column1.size() - 1).getRow());
+                    }
                 }
-                //System.out.println("flag: " + current.getRow() + "--" + next.getRow());
             }
         }
         for (int i = 0; i < rows.size() - 1; i = i + 2) {
@@ -178,15 +177,23 @@ public class WordTable2Excel {
             sheet.addMergedRegion(region);
         }
         //另存为excel
+        return wb;
+    }
+
+    private static String saveExcel(HSSFWorkbook wb) {
         try {
-            FileOutputStream fout = new FileOutputStream(fileName + ".xls");
+            String newFileName = String.valueOf(new Date().getTime());//时间戳作为文件名，考虑并发
+            FileOutputStream fot = new FileOutputStream(newFileName + ".xls");
             // 选中项目右键，点击Refresh，即可显示导出文件
-            wb.write(fout);
-            fout.close();
+            wb.write(fot);
+            fot.close();
+            return newFileName + ".xls";
         } catch (Exception e) {
             e.printStackTrace();
         }
+        return "保存失败";
     }
+
 
     //格式化表格中的内容
     private static String trim(String s) {
