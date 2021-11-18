@@ -1,14 +1,12 @@
 package org.wordTable2Excel;
 
+import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileOutputStream;
 import java.io.IOException;
-import java.lang.reflect.Array;
 import java.util.*;
 
-import org.apache.poi.hssf.usermodel.HSSFCell;
 import org.apache.poi.hssf.usermodel.HSSFCellStyle;
-import org.apache.poi.hssf.usermodel.HSSFRow;
 import org.apache.poi.hssf.usermodel.HSSFSheet;
 import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.apache.poi.hwpf.HWPFDocument;
@@ -26,17 +24,19 @@ import org.apache.poi.ss.util.CellRangeAddress;
 
 public class WordTable2Excel {
     public static void main(String[] args) throws IOException {
-        String filePath = "E:\\心肺复苏";
-        HSSFWorkbook wb = getExcel(filePath);
+        //String filePath = "心肺复苏";
+        String filePath = "E:\\心肺复苏.doc";
+        File file = new File(filePath);
+        HSSFWorkbook wb = getExcel(file);
         String newFileName = saveExcel(wb);
         System.out.println(newFileName);
     }
 
-    public static HSSFWorkbook getExcel(String filePath) {
+    public static HSSFWorkbook getExcel(File file) {
         try {
             //载入文档最好格式为.doc后缀
             //.docx后缀文件可能存在问题，可将.docx后缀文件另存为.doc
-            FileInputStream in = new FileInputStream(filePath + ".doc");//载入文档
+            FileInputStream in = new FileInputStream(file);//载入文档
             POIFSFileSystem pfs = new POIFSFileSystem(in);
             HWPFDocument hwpf = new HWPFDocument(pfs);
             Range range = hwpf.getRange();//得到文档的读取范围
